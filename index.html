@@ -7,81 +7,90 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="app-shell">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Mini crossword</p>
-        <h1>CrossPop</h1>
-        <p class="subtitle">Movies, music, geography and mixed mini puzzles.</p>
+  <main class="app">
+    <header class="topbar">
+      <button id="backBtn" class="top-btn hidden">‹ Puzzles</button>
+      <div class="brand">CrossPop</div>
+      <div class="timer-area">
+        <span id="timer">00:00</span>
+        <span id="bestTime">Best --</span>
+      </div>
+    </header>
+
+    <section id="homePanel" class="home">
+      <div class="home-card">
+        <p class="kicker">Mini crossword</p>
+        <h1>Choose a puzzle</h1>
+        <p class="home-copy">A cleaner New York Times-style mini crossword layout for iPhone testing.</p>
+
+        <div class="puzzle-list">
+          <button class="puzzle-choice" data-puzzle="mixed-001.json"><span><strong>Pop & Places Mini</strong><small>Mixed • Easy-Medium</small></span><em>Play</em></button>
+          <button class="puzzle-choice" data-puzzle="movies-001.json"><span><strong>Movie Night Mini</strong><small>Movies • Easy-Medium</small></span><em>Play</em></button>
+          <button class="puzzle-choice" data-puzzle="music-001.json"><span><strong>Chart Hits Mini</strong><small>Music • Easy-Medium</small></span><em>Play</em></button>
+          <button class="puzzle-choice" data-puzzle="geography-001.json"><span><strong>World Places Mini</strong><small>Geography • Easy-Medium</small></span><em>Play</em></button>
+        </div>
       </div>
     </section>
 
-    <section class="panel home-panel" id="homePanel">
-      <h2>Choose a puzzle</h2>
-      <p class="small">7x7 intersecting crossword grids. Best times are saved on this device.</p>
-      <div class="theme-grid">
-        <button class="theme-card" data-puzzle="mixed-001.json">
-          <strong>Mixed</strong><span>Pop & Places Mini</span>
-        </button>
-        <button class="theme-card" data-puzzle="movies-001.json">
-          <strong>Movies</strong><span>Hollywood Mini</span>
-        </button>
-        <button class="theme-card" data-puzzle="music-001.json">
-          <strong>Music</strong><span>Chart Hits Mini</span>
-        </button>
-        <button class="theme-card" data-puzzle="geography-001.json">
-          <strong>Geography</strong><span>World Places Mini</span>
-        </button>
-      </div>
-    </section>
-
-    <section class="panel puzzle-panel hidden" id="puzzlePanel">
-      <div class="puzzle-topbar">
-        <button id="backBtn" class="ghost-btn">← Puzzles</button>
-        <div class="timer-box">
-          <span id="timer">00:00</span>
-          <span id="bestTime">Best: --</span>
-        </div>
+    <section id="puzzlePanel" class="puzzle hidden">
+      <div class="puzzle-heading">
+        <p id="puzzleMeta" class="meta"></p>
+        <h1 id="puzzleTitle">Puzzle</h1>
       </div>
 
-      <div class="puzzle-title-row">
-        <div>
-          <h2 id="puzzleTitle">Puzzle</h2>
-          <p id="puzzleMeta" class="small"></p>
-        </div>
-        <button id="changeDirectionBtn" class="ghost-btn">Direction: Across</button>
+      <div class="active-clue-bar">
+        <button id="prevClueBtn" class="nav-clue">‹</button>
+        <div id="activeClue" class="active-clue">Tap a square to start.</div>
+        <button id="nextClueBtn" class="nav-clue">›</button>
       </div>
 
-      <div class="game-layout">
-        <section>
+      <div class="desktop-layout">
+        <section class="board-column">
           <div id="grid" class="crossword-grid" aria-label="Crossword grid"></div>
-          <input id="mobileInput" autocomplete="off" autocapitalize="characters" inputmode="text" maxlength="1" aria-label="Mobile crossword input" />
-          <p id="activeClue" class="active-clue">Tap a square, then type.</p>
 
-          <div class="controls">
+          <div class="typed-panel">
+            <span>Active square</span>
+            <strong id="typedPreview">—</strong>
+          </div>
+
+          <input id="mobileInput" autocomplete="off" autocapitalize="characters" inputmode="text" maxlength="1" aria-label="Mobile crossword input" />
+
+          <div class="actions">
             <button id="checkBtn">Check</button>
             <button id="revealLetterBtn">Reveal Letter</button>
             <button id="revealWordBtn">Reveal Word</button>
-            <button id="resetBtn">Reset</button>
+            <button id="resetBtn" class="secondary">Reset</button>
           </div>
+
+          <div class="keyboard" id="keyboard"></div>
         </section>
 
-        <aside class="clues">
-          <div>
-            <h3>Across</h3>
-            <ol id="acrossClues"></ol>
-          </div>
-          <div>
-            <h3>Down</h3>
-            <ol id="downClues"></ol>
+        <aside class="clue-panel">
+          <div class="clue-columns">
+            <section>
+              <h2>Across</h2>
+              <ol id="acrossClues"></ol>
+            </section>
+            <section>
+              <h2>Down</h2>
+              <ol id="downClues"></ol>
+            </section>
           </div>
         </aside>
+      </div>
+
+      <div class="mobile-clue-drawer">
+        <div class="drawer-tabs">
+          <button id="mobileAcrossTab" class="tab active" data-tab="across">Across</button>
+          <button id="mobileDownTab" class="tab" data-tab="down">Down</button>
+        </div>
+        <ol id="mobileClues"></ol>
       </div>
     </section>
 
     <section class="modal hidden" id="completeModal">
       <div class="modal-card">
-        <h2>Puzzle complete</h2>
+        <h2>Nice work</h2>
         <p id="completeText"></p>
         <button id="closeModalBtn">Continue</button>
       </div>
