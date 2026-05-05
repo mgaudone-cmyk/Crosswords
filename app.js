@@ -1,347 +1,399 @@
-const puzzleFiles = {
-  daily: 'data/mixed-001.json',
-  movies: 'data/movies-001.json',
-  music: 'data/music-001.json',
-  geography: 'data/geography-001.json',
-  mixed: 'data/mixed-001.json'
-};
+const PUZZLE_PATH = "data/";
+const GRID_SIZE = 7;
 
-let currentPuzzle = null;
+let puzzle = null;
+let solution = [];
+let entries = [];
 let userGrid = [];
-let active = { row: 0, col: 0 };
-let direction = 'across';
-let timerId = null;
+let active = { row: 0, col: 0, direction: "across" };
 let seconds = 0;
+let timerId = null;
+let completed = false;
 
-const screens = {
-  home: document.getElementById('homeScreen'),
-  puzzle: document.getElementById('puzzleScreen'),
-  result: document.getElementById('resultScreen')
-};
+const homePanel = document.getElementById("homePanel");
+const puzzlePanel = document.getElementById("puzzlePanel");
+const gridEl = document.getElementById("grid");
+const mobileInput = document.getElementById("mobileInput");
+const timerEl = document.getElementById("timer");
+const bestTimeEl = document.getElementById("bestTime");
+const puzzleTitleEl = document.getElementById("puzzleTitle");
+const puzzleMetaEl = document.getElementById("puzzleMeta");
+const acrossCluesEl = document.getElementById("acrossClues");
+const downCluesEl = document.getElementById("downClues");
+const activeClueEl = document.getElementById("activeClue");
+const directionBtn = document.getElementById("changeDirectionBtn");
+const completeModal = document.getElementById("completeModal");
+const completeText = document.getElementById("completeText");
 
-const gridEl = document.getElementById('crosswordGrid');
-const acrossCluesEl = document.getElementById('acrossClues');
-const downCluesEl = document.getElementById('downClues');
-const mobileInput = document.getElementById('mobileInput');
+document.querySelectorAll("[data-puzzle]").forEach(button => {
+  button.addEventListener("click", () => loadPuzzle(button.dataset.puzzle));
+});
 
-function showScreen(name) {
-  Object.values(screens).forEach(screen => screen.classList.remove('active'));
-  screens[name].classList.add('active');
-  document.getElementById('homeBtn').classList.toggle('hidden', name === 'home');
-}
+document.getElementById("backBtn").addEventListener("click", () => {
+  stopTimer();
+  puzzlePanel.classList.add("hidden");
+  homePanel.classList.remove("hidden");
+});
 
-function formatTime(value) {
-  const mins = Math.floor(value / 60).toString().padStart(2, '0');
-  const secs = (value % 60).toString().padStart(2, '0');
-  return `${mins}:${secs}`;
-}
+document.getElementById("checkBtn").addEventListener("click", checkPuzzle);
+document.getElementById("revealLetterBtn").addEventListener("click", revealLetter);
+document.getElementById("revealWordBtn").addEventListener("click", revealWord);
+document.getElementById("resetBtn").addEventListener("click", resetPuzzle);
+document.getElementById("closeModalBtn").addEventListener("click", () => completeModal.classList.add("hidden"));
 
-function startTimer() {
-  clearInterval(timerId);
-  seconds = 0;
-  document.getElementById('timer').textContent = '00:00';
-  timerId = setInterval(() => {
-    seconds += 1;
-    document.getElementById('timer').textContent = formatTime(seconds);
-  }, 1000);
-}
+directionBtn.addEventListener("click", () => {
+  active.direction = active.direction === "across" ? "down" : "across";
+  updateHighlights();
+});
 
-function stopTimer() {
-  clearInterval(timerId);
-  timerId = null;
-}
+document.addEventListener("keydown", handleKeydown);
+mobileInput.addEventListener("input", e => {
+  const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
+  e.target.value = "";
+  if (value) inputLetter(value[0]);
+});
 
-async function loadPuzzle(theme) {
+async function loadPuzzle(filename) {
   try {
-    const response = await fetch(puzzleFiles[theme]);
-    if (!response.ok) throw new Error('Puzzle file not found.');
-    currentPuzzle = await response.json();
-    initializePuzzle();
+    const response = await fetch(PUZZLE_PATH + filename + "?v=" + Date.now());
+    if (!response.ok) throw new Error("Puzzle not found: " + filename);
+    puzzle = await response.json();
+    startPuzzle();
   } catch (error) {
-    showMessage('Could not load puzzle. Make sure the data files are deployed with the app.', 'bad');
-    console.error(error);
+    alert("Could not load puzzle. Check that your JSON files are inside the /data folder.\n\n" + error.message);
   }
 }
 
-function initializePuzzle() {
-  userGrid = currentPuzzle.grid.map(row => row.map(cell => cell === '#' ? '#' : ''));
-  active = findFirstPlayableCell();
-  direction = 'across';
-  document.getElementById('puzzleTitle').textContent = currentPuzzle.title;
-  document.getElementById('puzzleMeta').textContent = `${currentPuzzle.theme} • ${currentPuzzle.difficulty}`;
-  const best = localStorage.getItem(`best-${currentPuzzle.id}`);
-  document.getElementById('bestTime').textContent = best ? `Best: ${formatTime(Number(best))}` : 'Best: --';
+function startPuzzle() {
+  completed = false;
+  solution = puzzle.grid;
+  userGrid = solution.map(row => row.map(cell => cell === "#" ? "#" : ""));
+  entries = [...puzzle.clues.across.map(e => ({...e, direction: "across"})), ...puzzle.clues.down.map(e => ({...e, direction: "down"}))];
+
+  puzzleTitleEl.textContent = puzzle.title;
+  puzzleMetaEl.textContent = `${puzzle.theme} • ${puzzle.difficulty}`;
+  homePanel.classList.add("hidden");
+  puzzlePanel.classList.remove("hidden");
   renderGrid();
   renderClues();
-  updateHighlights();
-  showScreen('puzzle');
+  setFirstActiveCell();
+  seconds = 0;
+  updateTimer();
+  updateBest();
   startTimer();
-  mobileInput.focus();
-}
-
-function findFirstPlayableCell() {
-  for (let r = 0; r < currentPuzzle.grid.length; r++) {
-    for (let c = 0; c < currentPuzzle.grid[r].length; c++) {
-      if (currentPuzzle.grid[r][c] !== '#') return { row: r, col: c };
-    }
-  }
-  return { row: 0, col: 0 };
-}
-
-function clueNumberForCell(row, col) {
-  const all = [...currentPuzzle.clues.across, ...currentPuzzle.clues.down];
-  const clue = all.find(item => item.row === row && item.col === col);
-  return clue ? clue.number : '';
 }
 
 function renderGrid() {
-  gridEl.innerHTML = '';
-  gridEl.style.gridTemplateColumns = `repeat(${currentPuzzle.gridSize}, 1fr)`;
-  currentPuzzle.grid.forEach((row, r) => {
-    row.forEach((cell, c) => {
-      const div = document.createElement('div');
-      div.className = cell === '#' ? 'cell block' : 'cell';
-      div.dataset.row = r;
-      div.dataset.col = c;
-      if (cell !== '#') {
-        const number = clueNumberForCell(r, c);
-        if (number) {
-          const num = document.createElement('span');
-          num.className = 'num';
-          num.textContent = number;
-          div.appendChild(num);
+  gridEl.innerHTML = "";
+  gridEl.style.gridTemplateColumns = `repeat(${puzzle.gridSize || GRID_SIZE}, 1fr)`;
+  gridEl.style.gridTemplateRows = `repeat(${puzzle.gridSize || GRID_SIZE}, 1fr)`;
+
+  for (let r = 0; r < solution.length; r++) {
+    for (let c = 0; c < solution[r].length; c++) {
+      const cell = document.createElement("div");
+      cell.className = solution[r][c] === "#" ? "cell black" : "cell";
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+
+      if (solution[r][c] !== "#") {
+        const num = getCellNumber(r, c);
+        if (num) {
+          const numEl = document.createElement("span");
+          numEl.className = "num";
+          numEl.textContent = num;
+          cell.appendChild(numEl);
         }
-        const letter = document.createElement('span');
-        letter.className = 'letter';
+
+        const letter = document.createElement("span");
+        letter.className = "letter";
         letter.textContent = userGrid[r][c];
-        div.appendChild(letter);
-        div.addEventListener('click', () => selectCell(r, c));
+        cell.appendChild(letter);
+
+        cell.addEventListener("click", () => selectCell(r, c));
       }
-      gridEl.appendChild(div);
-    });
-  });
+
+      gridEl.appendChild(cell);
+    }
+  }
 }
 
 function renderClues() {
-  renderClueList(acrossCluesEl, currentPuzzle.clues.across, 'across');
-  renderClueList(downCluesEl, currentPuzzle.clues.down, 'down');
+  acrossCluesEl.innerHTML = "";
+  downCluesEl.innerHTML = "";
+
+  puzzle.clues.across.forEach(clue => acrossCluesEl.appendChild(clueItem(clue, "across")));
+  puzzle.clues.down.forEach(clue => downCluesEl.appendChild(clueItem(clue, "down")));
 }
 
-function renderClueList(container, clues, dir) {
-  container.innerHTML = '';
-  clues.forEach(clue => {
-    const li = document.createElement('li');
-    li.dataset.number = clue.number;
-    li.dataset.direction = dir;
-    li.innerHTML = `<span class="clue-number">${clue.number}.</span>${clue.clue}`;
-    li.addEventListener('click', () => {
-      direction = dir;
-      selectCell(clue.row, clue.col, false);
-    });
-    container.appendChild(li);
+function clueItem(clue, direction) {
+  const li = document.createElement("li");
+  li.dataset.number = clue.number;
+  li.dataset.direction = direction;
+  li.textContent = `${clue.number}. ${clue.clue}`;
+  li.addEventListener("click", () => {
+    active = { row: clue.row, col: clue.col, direction };
+    updateHighlights();
+    focusInput();
   });
+  return li;
 }
 
-function selectCell(row, col, toggle = true) {
-  if (currentPuzzle.grid[row][col] === '#') return;
-  if (toggle && active.row === row && active.col === col) {
-    direction = direction === 'across' ? 'down' : 'across';
+function selectCell(row, col) {
+  if (active.row === row && active.col === col) {
+    active.direction = active.direction === "across" ? "down" : "across";
+  } else {
+    active.row = row;
+    active.col = col;
+    if (!entryForCell(row, col, active.direction)) {
+      active.direction = active.direction === "across" ? "down" : "across";
+    }
   }
-  active = { row, col };
   updateHighlights();
-  mobileInput.focus();
+  focusInput();
 }
 
-function getActiveClue() {
-  const clues = currentPuzzle.clues[direction];
-  return clues.find(clue => cellBelongsToClue(active.row, active.col, clue, direction));
+function setFirstActiveCell() {
+  const first = puzzle.clues.across[0] || puzzle.clues.down[0];
+  active = { row: first.row, col: first.col, direction: puzzle.clues.across[0] ? "across" : "down" };
+  updateHighlights();
 }
 
-function cellBelongsToClue(row, col, clue, dir) {
-  const len = clue.answer.length;
-  if (dir === 'across') return row === clue.row && col >= clue.col && col < clue.col + len;
-  return col === clue.col && row >= clue.row && row < clue.row + len;
+function getCellNumber(row, col) {
+  const entry = entries.find(e => e.row === row && e.col === col);
+  return entry ? entry.number : "";
 }
 
-function activeWordCells() {
-  const clue = getActiveClue();
-  if (!clue) return [{ ...active }];
-  return clue.answer.split('').map((_, i) => direction === 'across'
-    ? { row: clue.row, col: clue.col + i }
-    : { row: clue.row + i, col: clue.col }
-  );
+function entryForCell(row, col, direction) {
+  return entries.find(e => {
+    if (e.direction !== direction) return false;
+    if (direction === "across") {
+      return row === e.row && col >= e.col && col < e.col + e.answer.length;
+    }
+    return col === e.col && row >= e.row && row < e.row + e.answer.length;
+  });
 }
 
 function updateHighlights() {
-  document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('active', 'word'));
-  document.querySelectorAll('.clue-section li').forEach(li => li.classList.remove('active'));
+  document.querySelectorAll(".cell").forEach(el => el.classList.remove("active", "word"));
+  document.querySelectorAll(".clues li").forEach(el => el.classList.remove("active"));
 
-  activeWordCells().forEach(({ row, col }) => {
-    const cell = getCellEl(row, col);
-    if (cell) cell.classList.add('word');
-  });
-  const selected = getCellEl(active.row, active.col);
-  if (selected) selected.classList.add('active');
+  let entry = entryForCell(active.row, active.col, active.direction);
 
-  const clue = getActiveClue();
-  if (clue) {
-    const clueEl = document.querySelector(`li[data-direction="${direction}"][data-number="${clue.number}"]`);
-    if (clueEl) clueEl.classList.add('active');
+  if (!entry) {
+    const alt = active.direction === "across" ? "down" : "across";
+    entry = entryForCell(active.row, active.col, alt);
+    if (entry) active.direction = alt;
   }
-}
 
-function getCellEl(row, col) {
-  return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-}
+  directionBtn.textContent = `Direction: ${capitalize(active.direction)}`;
 
-function inputLetter(letter) {
-  if (!/^[a-zA-Z]$/.test(letter)) return;
-  userGrid[active.row][active.col] = letter.toUpperCase();
-  renderGrid();
-  moveNext();
-  updateHighlights();
-  checkCompletion();
-}
+  if (entry) {
+    for (let i = 0; i < entry.answer.length; i++) {
+      const r = entry.direction === "across" ? entry.row : entry.row + i;
+      const c = entry.direction === "across" ? entry.col + i : entry.col;
+      const el = cellEl(r, c);
+      if (el) el.classList.add("word");
+    }
 
-function moveNext() {
-  const cells = activeWordCells();
-  const index = cells.findIndex(cell => cell.row === active.row && cell.col === active.col);
-  if (index >= 0 && index < cells.length - 1) active = cells[index + 1];
-}
-
-function movePrevious() {
-  const cells = activeWordCells();
-  const index = cells.findIndex(cell => cell.row === active.row && cell.col === active.col);
-  if (index > 0) active = cells[index - 1];
-}
-
-function handleBackspace() {
-  if (userGrid[active.row][active.col]) {
-    userGrid[active.row][active.col] = '';
-  } else {
-    movePrevious();
-    userGrid[active.row][active.col] = '';
+    const clueEl = document.querySelector(`li[data-number="${entry.number}"][data-direction="${entry.direction}"]`);
+    if (clueEl) clueEl.classList.add("active");
+    activeClueEl.textContent = `${entry.number} ${capitalize(entry.direction)}: ${entry.clue}`;
   }
-  renderGrid();
-  updateHighlights();
+
+  const activeEl = cellEl(active.row, active.col);
+  if (activeEl) activeEl.classList.add("active");
 }
 
-function moveByArrow(key) {
-  const delta = {
-    ArrowUp: [-1, 0, 'down'],
-    ArrowDown: [1, 0, 'down'],
-    ArrowLeft: [0, -1, 'across'],
-    ArrowRight: [0, 1, 'across']
-  }[key];
-  if (!delta) return;
-  direction = delta[2];
-  let row = active.row + delta[0];
-  let col = active.col + delta[1];
-  if (row >= 0 && col >= 0 && row < currentPuzzle.gridSize && col < currentPuzzle.gridSize && currentPuzzle.grid[row][col] !== '#') {
-    active = { row, col };
+function handleKeydown(e) {
+  if (puzzlePanel.classList.contains("hidden")) return;
+
+  const key = e.key;
+  if (/^[a-zA-Z]$/.test(key)) {
+    inputLetter(key.toUpperCase());
+  } else if (key === "Backspace") {
+    e.preventDefault();
+    eraseLetter();
+  } else if (key === "ArrowRight") {
+    e.preventDefault();
+    move(0, 1);
+  } else if (key === "ArrowLeft") {
+    e.preventDefault();
+    move(0, -1);
+  } else if (key === "ArrowDown") {
+    e.preventDefault();
+    move(1, 0);
+  } else if (key === "ArrowUp") {
+    e.preventDefault();
+    move(-1, 0);
+  } else if (key === " ") {
+    e.preventDefault();
+    active.direction = active.direction === "across" ? "down" : "across";
     updateHighlights();
   }
 }
 
-function checkPuzzle() {
-  let wrong = 0;
-  let empty = 0;
-  document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('correct', 'incorrect'));
-  currentPuzzle.grid.forEach((row, r) => row.forEach((answer, c) => {
-    if (answer === '#') return;
-    const cell = getCellEl(r, c);
-    if (!userGrid[r][c]) {
-      empty += 1;
-    } else if (userGrid[r][c] === answer) {
-      cell.classList.add('correct');
-    } else {
-      wrong += 1;
-      cell.classList.add('incorrect');
-    }
-  }));
-  if (wrong === 0 && empty === 0) {
-    completePuzzle();
-  } else if (wrong === 0) {
-    showMessage(`${empty} empty squares left. No mistakes found.`, 'good');
+function inputLetter(letter) {
+  if (solution[active.row][active.col] === "#") return;
+  userGrid[active.row][active.col] = letter;
+  refreshLetters();
+  advance();
+  updateHighlights();
+  checkCompletion();
+}
+
+function eraseLetter() {
+  if (userGrid[active.row][active.col]) {
+    userGrid[active.row][active.col] = "";
   } else {
-    showMessage(`${wrong} incorrect square${wrong > 1 ? 's' : ''}.`, 'bad');
+    moveBack();
+    userGrid[active.row][active.col] = "";
+  }
+  refreshLetters();
+  updateHighlights();
+}
+
+function advance() {
+  const entry = entryForCell(active.row, active.col, active.direction);
+  if (!entry) return;
+
+  if (active.direction === "across" && active.col < entry.col + entry.answer.length - 1) active.col++;
+  if (active.direction === "down" && active.row < entry.row + entry.answer.length - 1) active.row++;
+}
+
+function moveBack() {
+  const entry = entryForCell(active.row, active.col, active.direction);
+  if (!entry) return;
+
+  if (active.direction === "across" && active.col > entry.col) active.col--;
+  if (active.direction === "down" && active.row > entry.row) active.row--;
+}
+
+function move(dr, dc) {
+  let r = active.row + dr;
+  let c = active.col + dc;
+  if (r >= 0 && r < solution.length && c >= 0 && c < solution[0].length && solution[r][c] !== "#") {
+    active.row = r;
+    active.col = c;
+    updateHighlights();
+  }
+}
+
+function refreshLetters() {
+  document.querySelectorAll(".cell:not(.black)").forEach(el => {
+    const r = Number(el.dataset.row);
+    const c = Number(el.dataset.col);
+    el.querySelector(".letter").textContent = userGrid[r][c];
+  });
+}
+
+function checkPuzzle() {
+  document.querySelectorAll(".cell").forEach(el => el.classList.remove("good", "bad"));
+  for (let r = 0; r < solution.length; r++) {
+    for (let c = 0; c < solution[r].length; c++) {
+      if (solution[r][c] === "#") continue;
+      const el = cellEl(r, c);
+      if (!userGrid[r][c]) continue;
+      el.classList.add(userGrid[r][c] === solution[r][c] ? "good" : "bad");
+    }
   }
 }
 
 function revealLetter() {
-  userGrid[active.row][active.col] = currentPuzzle.grid[active.row][active.col];
-  renderGrid();
-  moveNext();
+  userGrid[active.row][active.col] = solution[active.row][active.col];
+  refreshLetters();
   updateHighlights();
   checkCompletion();
 }
 
 function revealWord() {
-  activeWordCells().forEach(({ row, col }) => {
-    userGrid[row][col] = currentPuzzle.grid[row][col];
-  });
-  renderGrid();
+  const entry = entryForCell(active.row, active.col, active.direction);
+  if (!entry) return;
+
+  for (let i = 0; i < entry.answer.length; i++) {
+    const r = entry.direction === "across" ? entry.row : entry.row + i;
+    const c = entry.direction === "across" ? entry.col + i : entry.col;
+    userGrid[r][c] = solution[r][c];
+  }
+
+  refreshLetters();
   updateHighlights();
   checkCompletion();
 }
 
 function resetPuzzle() {
-  if (!confirm('Reset this puzzle?')) return;
-  initializePuzzle();
+  if (!confirm("Reset this puzzle?")) return;
+  userGrid = solution.map(row => row.map(cell => cell === "#" ? "#" : ""));
+  seconds = 0;
+  completed = false;
+  refreshLetters();
+  updateHighlights();
+  updateTimer();
 }
 
 function checkCompletion() {
-  const complete = currentPuzzle.grid.every((row, r) => row.every((answer, c) => answer === '#' || userGrid[r][c] === answer));
-  if (complete) completePuzzle();
-}
+  if (completed) return;
 
-function completePuzzle() {
+  for (let r = 0; r < solution.length; r++) {
+    for (let c = 0; c < solution[r].length; c++) {
+      if (solution[r][c] !== "#" && userGrid[r][c] !== solution[r][c]) return;
+    }
+  }
+
+  completed = true;
   stopTimer();
-  const key = `best-${currentPuzzle.id}`;
-  const best = Number(localStorage.getItem(key));
-  if (!best || seconds < best) localStorage.setItem(key, String(seconds));
-  document.getElementById('resultSummary').textContent = `${currentPuzzle.title} solved in ${formatTime(seconds)}.`;
-  showScreen('result');
+  saveBest();
+  completeText.textContent = `You finished ${puzzle.title} in ${formatTime(seconds)}.`;
+  completeModal.classList.remove("hidden");
+  updateBest();
 }
 
-function showMessage(text, type) {
-  const box = document.getElementById('messageBox');
-  box.textContent = text;
-  box.className = `message-box ${type}`;
+function startTimer() {
+  stopTimer();
+  timerId = setInterval(() => {
+    seconds++;
+    updateTimer();
+  }, 1000);
 }
 
-function clearMessage() {
-  const box = document.getElementById('messageBox');
-  box.className = 'message-box hidden';
-  box.textContent = '';
+function stopTimer() {
+  if (timerId) clearInterval(timerId);
+  timerId = null;
 }
 
-window.addEventListener('keydown', event => {
-  if (!currentPuzzle || !screens.puzzle.classList.contains('active')) return;
-  clearMessage();
-  if (/^[a-zA-Z]$/.test(event.key)) inputLetter(event.key);
-  else if (event.key === 'Backspace') handleBackspace();
-  else if (event.key === ' ') { direction = direction === 'across' ? 'down' : 'across'; updateHighlights(); }
-  else if (event.key.startsWith('Arrow')) moveByArrow(event.key);
-});
+function updateTimer() {
+  timerEl.textContent = formatTime(seconds);
+}
 
-mobileInput.addEventListener('input', event => {
-  const value = event.target.value;
-  if (value) inputLetter(value.slice(-1));
-  event.target.value = '';
-});
+function formatTime(total) {
+  const m = String(Math.floor(total / 60)).padStart(2, "0");
+  const s = String(total % 60).padStart(2, "0");
+  return `${m}:${s}`;
+}
 
-mobileInput.addEventListener('keydown', event => {
-  if (event.key === 'Backspace') handleBackspace();
-});
+function bestKey() {
+  return `crosspop_best_${puzzle.id}`;
+}
 
-document.querySelectorAll('.theme-card').forEach(button => {
-  button.addEventListener('click', () => loadPuzzle(button.dataset.theme));
-});
+function saveBest() {
+  const key = bestKey();
+  const previous = Number(localStorage.getItem(key));
+  if (!previous || seconds < previous) localStorage.setItem(key, String(seconds));
+}
 
-document.getElementById('homeBtn').addEventListener('click', () => { stopTimer(); showScreen('home'); });
-document.getElementById('checkBtn').addEventListener('click', checkPuzzle);
-document.getElementById('revealLetterBtn').addEventListener('click', revealLetter);
-document.getElementById('revealWordBtn').addEventListener('click', revealWord);
-document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
-document.getElementById('playAgainBtn').addEventListener('click', () => showScreen('home'));
+function updateBest() {
+  if (!puzzle) return;
+  const best = Number(localStorage.getItem(bestKey()));
+  bestTimeEl.textContent = best ? `Best: ${formatTime(best)}` : "Best: --";
+}
+
+function cellEl(row, col) {
+  return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+}
+
+function focusInput() {
+  mobileInput.focus();
+}
+
+function capitalize(word) {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}

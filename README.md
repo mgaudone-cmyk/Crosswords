@@ -1,73 +1,50 @@
-# CrossPop Crossword App
+# CrossPop Crossword
 
-A mobile-first static crossword web app that runs on GitHub Pages.
+A mobile-first static crossword web app for GitHub Pages.
 
-## What is included
+## Files
 
-- `index.html` — app shell
-- `styles.css` — responsive iPhone-friendly styling
-- `app.js` — crossword engine
-- `/data/*.json` — sample 7x7 intersecting crossword puzzles
-
-## Features
-
-- Theme selection: Daily, Movies, Music, Geography, Mixed
-- True intersecting grids with Across and Down clues
-- Timer
-- Best time saved locally with `localStorage`
-- Check puzzle
-- Reveal letter
-- Reveal word
-- Reset puzzle
-- Mobile keyboard support
-- Desktop keyboard support
-- GitHub Pages compatible
+```text
+index.html
+styles.css
+app.js
+/data
+  mixed-001.json
+  movies-001.json
+  music-001.json
+  geography-001.json
+README.md
+```
 
 ## Deploy on GitHub Pages
 
-1. Create a new GitHub repository.
-2. Upload all files and folders from this package.
-3. Go to **Settings** > **Pages**.
-4. Under **Build and deployment**, choose:
-   - Source: `Deploy from a branch`
-   - Branch: `main`
-   - Folder: `/root`
-5. Save.
-6. GitHub will generate your live URL.
+1. Upload all files exactly as shown above.
+2. Make sure `styles.css` is in the root folder.
+3. Make sure all puzzle JSON files are inside the `/data` folder.
+4. Go to **Settings → Pages**.
+5. Select **Deploy from a branch**.
+6. Branch: `main`
+7. Folder: `/root`
+8. Save.
+
+Your test URL should look like:
+
+```text
+https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/
+```
+
+For your current repo, likely:
+
+```text
+https://mgaudone-cmyk.github.io/Crosswords/
+```
 
 ## Add more puzzles
 
-Create a new JSON file in `/data`, then add it to `puzzleFiles` in `app.js`.
+Create another JSON file inside `/data`, then add a button in `index.html` with:
 
-Puzzle files use this format:
-
-```json
-{
-  "id": "movies-002",
-  "title": "Movie Night Mini 2",
-  "theme": "Movies",
-  "difficulty": "Easy-Medium",
-  "gridSize": 7,
-  "grid": [
-    ["A", "V", "A", "T", "A", "R", "#"]
-  ],
-  "clues": {
-    "across": [],
-    "down": []
-  }
-}
+```html
+<button class="theme-card" data-puzzle="new-puzzle.json">
+  <strong>Theme</strong><span>Title</span>
+</button>
 ```
-
-Use `#` for blocked squares. Each clue needs:
-
-- `number`
-- `row`
-- `col`
-- `answer`
-- `clue`
-
-Rows and columns start at `0`.
-
-## Recommended next upgrade
-
-Add a puzzle generator script that takes a curated answer bank, attempts valid intersections, and exports JSON puzzles for review before publishing.
