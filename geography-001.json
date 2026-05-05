@@ -1,0 +1,30 @@
+{
+  "id": "geography-001",
+  "title": "World Map Mini",
+  "theme": "Geography",
+  "difficulty": "Easy-Medium",
+  "gridSize": 7,
+  "grid": [
+    ["#", "#", "O", "C", "E", "A", "N"],
+    ["#", "I", "T", "A", "L", "Y", "#"],
+    ["#", "#", "T", "E", "X", "A", "S"],
+    ["#", "#", "A", "L", "P", "S", "#"],
+    ["#", "S", "W", "I", "S", "S", "#"],
+    ["#", "C", "A", "N", "A", "D", "A"],
+    ["#", "P", "A", "R", "I", "S", "#"]
+  ],
+  "clues": {
+    "across": [
+      {"number": 1, "row": 0, "col": 2, "answer": "OCEAN", "clue": "Atlantic or Pacific, for example"},
+      {"number": 3, "row": 1, "col": 1, "answer": "ITALY", "clue": "Boot-shaped European country"},
+      {"number": 4, "row": 2, "col": 2, "answer": "TEXAS", "clue": "Large U.S. state on the Gulf of Mexico"},
+      {"number": 5, "row": 3, "col": 2, "answer": "ALPS", "clue": "Mountain range near Switzerland"},
+      {"number": 6, "row": 4, "col": 1, "answer": "SWISS", "clue": "From Switzerland"},
+      {"number": 7, "row": 5, "col": 1, "answer": "CANADA", "clue": "Country with provinces and territories"},
+      {"number": 8, "row": 6, "col": 1, "answer": "PARIS", "clue": "City of Light"}
+    ],
+    "down": [
+      {"number": 2, "row": 0, "col": 2, "answer": "OTTAWA", "clue": "Capital city of Canada"}
+    ]
+  }
+}

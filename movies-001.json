@@ -1,0 +1,30 @@
+{
+  "id": "movies-001",
+  "title": "Movie Night Mini",
+  "theme": "Movies",
+  "difficulty": "Easy-Medium",
+  "gridSize": 7,
+  "grid": [
+    ["A", "V", "A", "T", "A", "R", "#"],
+    ["#", "E", "L", "S", "A", "#", "#"],
+    ["A", "R", "I", "E", "L", "#", "#"],
+    ["#", "T", "E", "N", "E", "T", "#"],
+    ["#", "I", "N", "D", "I", "E", "#"],
+    ["#", "G", "H", "O", "S", "T", "#"],
+    ["#", "O", "S", "C", "A", "R", "#"]
+  ],
+  "clues": {
+    "across": [
+      {"number": 1, "row": 0, "col": 0, "answer": "AVATAR", "clue": "Blue-skinned James Cameron blockbuster"},
+      {"number": 3, "row": 1, "col": 1, "answer": "ELSA", "clue": "Frozen queen"},
+      {"number": 4, "row": 2, "col": 0, "answer": "ARIEL", "clue": "The Little Mermaid"},
+      {"number": 5, "row": 3, "col": 1, "answer": "TENET", "clue": "Christopher Nolan film with time inversion"},
+      {"number": 6, "row": 4, "col": 1, "answer": "INDIE", "clue": "Non-studio film style"},
+      {"number": 7, "row": 5, "col": 1, "answer": "GHOST", "clue": "1990 romance with pottery scene"},
+      {"number": 8, "row": 6, "col": 1, "answer": "OSCAR", "clue": "Academy Award trophy"}
+    ],
+    "down": [
+      {"number": 2, "row": 0, "col": 1, "answer": "VERTIGO", "clue": "Hitchcock thriller with dizzying suspense"}
+    ]
+  }
+}

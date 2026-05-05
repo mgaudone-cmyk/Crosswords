@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CrossPop Crossword</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1>CrossPop</h1>
+        <p>Movies, music, geography and daily mini crosswords.</p>
+      </div>
+      <button id="homeBtn" class="ghost-btn hidden">Home</button>
+    </header>
+
+    <main>
+      <section id="homeScreen" class="screen active">
+        <div class="hero-card">
+          <h2>Choose a puzzle</h2>
+          <p>7x7 mini crosswords built for quick play and user testing.</p>
+        </div>
+
+        <div class="theme-grid">
+          <button class="theme-card" data-theme="daily">
+            <span>Daily</span>
+            <small>Today’s selected puzzle</small>
+          </button>
+          <button class="theme-card" data-theme="movies">
+            <span>Movies</span>
+            <small>Films, actors, franchises</small>
+          </button>
+          <button class="theme-card" data-theme="music">
+            <span>Music</span>
+            <small>Artists, genres, songs</small>
+          </button>
+          <button class="theme-card" data-theme="geography">
+            <span>Geography</span>
+            <small>Places, landmarks, maps</small>
+          </button>
+          <button class="theme-card" data-theme="mixed">
+            <span>Mixed</span>
+            <small>A little bit of everything</small>
+          </button>
+        </div>
+
+        <section class="info-card">
+          <h3>Testing notes</h3>
+          <p>The app stores best times on the device. Puzzles are loaded from JSON files, so you can add more without changing the app engine.</p>
+        </section>
+      </section>
+
+      <section id="puzzleScreen" class="screen">
+        <div class="puzzle-topbar">
+          <div>
+            <h2 id="puzzleTitle">Puzzle</h2>
+            <p id="puzzleMeta">Theme • Difficulty</p>
+          </div>
+          <div class="stats-box">
+            <span id="timer">00:00</span>
+            <small id="bestTime">Best: --</small>
+          </div>
+        </div>
+
+        <div class="puzzle-layout">
+          <div class="grid-wrap">
+            <div id="crosswordGrid" class="crossword-grid" aria-label="Crossword grid"></div>
+            <div class="mobile-entry">
+              <input id="mobileInput" inputmode="text" maxlength="1" autocomplete="off" autocapitalize="characters" />
+              <p>Tap a square, then type.</p>
+            </div>
+          </div>
+
+          <aside class="clues-panel">
+            <div class="clue-section">
+              <h3>Across</h3>
+              <ol id="acrossClues"></ol>
+            </div>
+            <div class="clue-section">
+              <h3>Down</h3>
+              <ol id="downClues"></ol>
+            </div>
+          </aside>
+        </div>
+
+        <div class="controls">
+          <button id="checkBtn">Check</button>
+          <button id="revealLetterBtn">Reveal Letter</button>
+          <button id="revealWordBtn">Reveal Word</button>
+          <button id="resetBtn" class="danger">Reset</button>
+        </div>
+
+        <div id="messageBox" class="message-box hidden"></div>
+      </section>
+
+      <section id="resultScreen" class="screen">
+        <div class="result-card">
+          <h2>Completed</h2>
+          <p id="resultSummary"></p>
+          <button id="playAgainBtn">Play another</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
