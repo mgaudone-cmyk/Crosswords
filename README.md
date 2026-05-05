@@ -1,23 +1,11 @@
-# CrossPop Crossword v2.1
+# CrossPop Crossword v3
 
-This version removes all references to the old mobile clue drawer, so the `mobileCluesEl.innerHTML` error is fixed.
+This version uses a denser 15x15 printed-crossword style grid with internal black tiles separating words throughout the puzzle.
 
-## Important GitHub upload instructions
-
-Replace these old files completely:
+Replace all files in GitHub, then test:
 
 ```text
-index.html
-styles.css
-app.js
-README.md
-/data
+https://mgaudone-cmyk.github.io/Crosswords/?v=30
 ```
 
-After uploading, open the site with a cache-busting URL:
-
-```text
-https://mgaudone-cmyk.github.io/Crosswords/?v=21
-```
-
-If it still shows the old error, Safari is caching the old JavaScript. Close the tab, reopen it, or use the `?v=21` URL above.
+Note: this is a stronger layout-testing package. The next step is a true crossword-generation pipeline so every Across and Down answer is curated and validated.
