@@ -1,23 +1,23 @@
 * { box-sizing: border-box; }
 
 :root {
-  --ink: #111111;
-  --muted: #666666;
+  --ink: #111;
+  --muted: #666;
   --border: #d8d8d8;
-  --paper: #ffffff;
   --soft: #f4f4f4;
   --blue: #a9d7f7;
   --yellow: #f6dc6a;
-  --black: #111111;
+  --black: #111;
   --green: #c8f4d2;
   --red: #ffd0d0;
 }
 
 html, body {
   margin: 0;
-  background: #ffffff;
+  background: #fff;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
+  overflow-x: hidden;
 }
 
 button {
@@ -91,8 +91,10 @@ button {
 
 .home h1 {
   margin: 0;
-  font-size: 42px;
+  font-size: clamp(34px, 11vw, 48px);
+  line-height: .95;
   letter-spacing: -0.06em;
+  max-width: 100%;
 }
 
 .home p {
@@ -214,6 +216,8 @@ button {
   color: #111;
   user-select: none;
   font-family: Georgia, "Times New Roman", serif;
+  min-width: 0;
+  min-height: 0;
 }
 
 .cell.black {
@@ -258,6 +262,7 @@ button {
   opacity: .01;
   border: 0;
   padding: 0;
+  font-size: 16px;
 }
 
 .action-bar {
@@ -303,7 +308,6 @@ button {
   margin: 0;
   padding: 0;
   list-style: none;
-  columns: 1;
 }
 
 .clues-panel li {
@@ -338,9 +342,7 @@ button {
 }
 
 @media (max-width: 900px) {
-  .workspace {
-    display: block;
-  }
+  .workspace { display: block; }
 
   .clues-panel {
     width: min(94vw, 700px);

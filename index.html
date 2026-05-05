@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>CrossPop Crossword</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=2.1" />
 </head>
 <body>
   <main class="app">
@@ -41,9 +41,9 @@
       </div>
 
       <div class="clue-strip">
-        <button id="prevClueBtn" class="clue-nav">‹</button>
+        <button id="prevClueBtn" class="clue-nav" type="button">‹</button>
         <div id="activeClue" class="active-clue">Tap a square to begin.</div>
-        <button id="nextClueBtn" class="clue-nav">›</button>
+        <button id="nextClueBtn" class="clue-nav" type="button">›</button>
       </div>
 
       <div class="workspace">
@@ -62,10 +62,10 @@
           />
 
           <div class="action-bar">
-            <button id="checkBtn">Check</button>
-            <button id="revealLetterBtn">Reveal letter</button>
-            <button id="revealWordBtn">Reveal word</button>
-            <button id="resetBtn" class="light">Reset</button>
+            <button id="checkBtn" type="button">Check</button>
+            <button id="revealLetterBtn" type="button">Reveal letter</button>
+            <button id="revealWordBtn" type="button">Reveal word</button>
+            <button id="resetBtn" class="light" type="button">Reset</button>
           </div>
         </section>
 
@@ -86,11 +86,11 @@
       <div class="modal-card">
         <h2>Completed</h2>
         <p id="completeText"></p>
-        <button id="closeModalBtn">Close</button>
+        <button id="closeModalBtn" type="button">Close</button>
       </div>
     </section>
   </main>
 
-  <script src="app.js"></script>
+  <script src="./app.js?v=2.1"></script>
 </body>
 </html>

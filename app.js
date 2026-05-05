@@ -1,4 +1,4 @@
-const PUZZLE_PATH = "data/";
+const PUZZLE_PATH = "./data/";
 
 let puzzle = null;
 let solution = [];
@@ -48,10 +48,10 @@ document.getElementById("nextClueBtn").addEventListener("click", () => moveClue(
 
 document.addEventListener("keydown", handleKeydown);
 
-// Mobile typing: use beforeinput only. This avoids the iPhone double-letter bug caused by input + keydown both firing.
 mobileInput.addEventListener("beforeinput", e => {
   if (puzzlePanel.classList.contains("hidden")) return;
   const data = (e.data || "").toUpperCase();
+
   if (/^[A-Z]$/.test(data)) {
     e.preventDefault();
     inputLetter(data);
@@ -67,12 +67,12 @@ mobileInput.addEventListener("input", () => {
 
 async function loadPuzzle(filename) {
   try {
-    const response = await fetch(PUZZLE_PATH + filename + "?v=" + Date.now());
+    const response = await fetch(PUZZLE_PATH + filename + "?v=2.1." + Date.now());
     if (!response.ok) throw new Error("Puzzle not found: " + filename);
     puzzle = await response.json();
     startPuzzle();
   } catch (error) {
-    alert("Could not load puzzle. Make sure JSON files are inside /data.\n\n" + error.message);
+    alert("Could not load puzzle. Make sure the JSON files are inside the /data folder.\n\n" + error.message);
   }
 }
 
@@ -173,7 +173,7 @@ function selectCell(row, col) {
 
 function setFirstActiveCell() {
   const first = puzzle.clues.across[0] || puzzle.clues.down[0];
-  active = { row: first.row, col: first.col, direction: first.direction || "across" };
+  active = { row: first.row, col: first.col, direction: "across" };
   updateHighlights();
 }
 
@@ -185,7 +185,9 @@ function getCellNumber(row, col) {
 function entryForCell(row, col, direction) {
   return entries.find(e => {
     if (e.direction !== direction) return false;
-    if (direction === "across") return row === e.row && col >= e.col && col < e.col + e.answer.length;
+    if (direction === "across") {
+      return row === e.row && col >= e.col && col < e.col + e.answer.length;
+    }
     return col === e.col && row >= e.row && row < e.row + e.answer.length;
   });
 }
@@ -300,7 +302,7 @@ function move(dr, dc) {
 
 function moveClue(step) {
   const list = entries.filter(e => e.direction === active.direction);
-  let entry = currentEntry();
+  const entry = currentEntry();
   let index = list.findIndex(e => entry && e.number === entry.number);
   if (index < 0) index = 0;
   index = (index + step + list.length) % list.length;

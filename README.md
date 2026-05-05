@@ -1,13 +1,10 @@
-# CrossPop Crossword
+# CrossPop Crossword v2.1
 
-This version fixes:
-- Double-letter typing bug on iPhone
-- Removes custom letter keyboard
-- Uses a stronger book-style crossword grid
-- Cleaner clue panel
-- Larger 11x11 puzzle model
+This version removes all references to the old mobile clue drawer, so the `mobileCluesEl.innerHTML` error is fixed.
 
-## Upload structure
+## Important GitHub upload instructions
+
+Replace these old files completely:
 
 ```text
 index.html
@@ -15,10 +12,12 @@ styles.css
 app.js
 README.md
 /data
-  mixed-001.json
-  movies-001.json
-  music-001.json
-  geography-001.json
 ```
 
-Replace the old files in GitHub with these files.
+After uploading, open the site with a cache-busting URL:
+
+```text
+https://mgaudone-cmyk.github.io/Crosswords/?v=21
+```
+
+If it still shows the old error, Safari is caching the old JavaScript. Close the tab, reopen it, or use the `?v=21` URL above.
