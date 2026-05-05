@@ -1,1 +1,30 @@
-
+{
+  "id": "music-001",
+  "title": "Music Mini",
+  "theme": "Music",
+  "difficulty": "Easy-Medium",
+  "gridSize": 7,
+  "grid": [
+    ["#", "#", "B", "L", "U", "E", "S"],
+    ["A", "D", "E", "L", "E", "#", "#"],
+    ["#", "L", "Y", "R", "I", "C", "#"],
+    ["#", "#", "O", "P", "E", "R", "A"],
+    ["#", "#", "N", "O", "T", "E", "S"],
+    ["V", "O", "C", "A", "L", "#", "#"],
+    ["Q", "U", "E", "E", "N", "#", "#"]
+  ],
+  "clues": {
+    "across": [
+      {"number": 1, "row": 0, "col": 2, "answer": "BLUES", "clue": "Soulful genre with twelve-bar roots"},
+      {"number": 3, "row": 1, "col": 0, "answer": "ADELE", "clue": "Singer of Hello"},
+      {"number": 4, "row": 2, "col": 1, "answer": "LYRIC", "clue": "Line from a song"},
+      {"number": 5, "row": 3, "col": 2, "answer": "OPERA", "clue": "Dramatic music for the stage"},
+      {"number": 6, "row": 4, "col": 2, "answer": "NOTES", "clue": "Written musical pitches"},
+      {"number": 7, "row": 5, "col": 0, "answer": "VOCAL", "clue": "Made with the voice"},
+      {"number": 8, "row": 6, "col": 0, "answer": "QUEEN", "clue": "Band led by Freddie Mercury"}
+    ],
+    "down": [
+      {"number": 2, "row": 0, "col": 2, "answer": "BEYONCE", "clue": "Renaissance superstar"}
+    ]
+  }
+}

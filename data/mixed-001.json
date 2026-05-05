@@ -1,0 +1,30 @@
+{
+  "id": "mixed-001",
+  "title": "Pop & Places Mini",
+  "theme": "Mixed",
+  "difficulty": "Easy-Medium",
+  "gridSize": 7,
+  "grid": [
+    ["#", "#", "T", "O", "K", "Y", "O"],
+    ["#", "M", "A", "L", "T", "A", "#"],
+    ["B", "E", "Y", "O", "N", "C", "E"],
+    ["#", "A", "L", "I", "E", "N", "#"],
+    ["#", "#", "O", "S", "C", "A", "R"],
+    ["#", "D", "R", "A", "K", "E", "#"],
+    ["#", "P", "A", "R", "I", "S", "#"]
+  ],
+  "clues": {
+    "across": [
+      {"number": 1, "row": 0, "col": 2, "answer": "TOKYO", "clue": "Capital of Japan"},
+      {"number": 3, "row": 1, "col": 1, "answer": "MALTA", "clue": "Mediterranean island nation"},
+      {"number": 4, "row": 2, "col": 0, "answer": "BEYONCE", "clue": "Single Ladies singer"},
+      {"number": 5, "row": 3, "col": 1, "answer": "ALIEN", "clue": "Sci-fi creature or Ridley Scott film"},
+      {"number": 6, "row": 4, "col": 2, "answer": "OSCAR", "clue": "Movie award"},
+      {"number": 7, "row": 5, "col": 1, "answer": "DRAKE", "clue": "Canadian rapper from Toronto"},
+      {"number": 8, "row": 6, "col": 1, "answer": "PARIS", "clue": "French capital"}
+    ],
+    "down": [
+      {"number": 2, "row": 0, "col": 2, "answer": "TAYLOR", "clue": "First name of Swift"}
+    ]
+  }
+}
