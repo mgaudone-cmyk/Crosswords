@@ -8,7 +8,7 @@ let active = { row: 0, col: 0, direction: "across" };
 let seconds = 0;
 let timerId = null;
 let completed = false;
-let mobileTab = "across";
+let lastInputStamp = 0;
 
 const homePanel = document.getElementById("homePanel");
 const puzzlePanel = document.getElementById("puzzlePanel");
@@ -21,12 +21,9 @@ const puzzleTitleEl = document.getElementById("puzzleTitle");
 const puzzleMetaEl = document.getElementById("puzzleMeta");
 const acrossCluesEl = document.getElementById("acrossClues");
 const downCluesEl = document.getElementById("downClues");
-const mobileCluesEl = document.getElementById("mobileClues");
 const activeClueEl = document.getElementById("activeClue");
-const typedPreview = document.getElementById("typedPreview");
 const completeModal = document.getElementById("completeModal");
 const completeText = document.getElementById("completeText");
-const keyboardEl = document.getElementById("keyboard");
 
 document.querySelectorAll("[data-puzzle]").forEach(button => {
   button.addEventListener("click", () => loadPuzzle(button.dataset.puzzle));
@@ -49,24 +46,24 @@ document.getElementById("closeModalBtn").addEventListener("click", () => complet
 document.getElementById("prevClueBtn").addEventListener("click", () => moveClue(-1));
 document.getElementById("nextClueBtn").addEventListener("click", () => moveClue(1));
 
-document.querySelectorAll(".tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    mobileTab = tab.dataset.tab;
-    active.direction = mobileTab;
-    updateTabState();
-    renderMobileClues();
-    updateHighlights();
-  });
-});
-
 document.addEventListener("keydown", handleKeydown);
-mobileInput.addEventListener("input", e => {
-  const value = e.target.value.toUpperCase().replace(/[^A-Z]/g, "");
-  e.target.value = "";
-  if (value) inputLetter(value[0]);
+
+// Mobile typing: use beforeinput only. This avoids the iPhone double-letter bug caused by input + keydown both firing.
+mobileInput.addEventListener("beforeinput", e => {
+  if (puzzlePanel.classList.contains("hidden")) return;
+  const data = (e.data || "").toUpperCase();
+  if (/^[A-Z]$/.test(data)) {
+    e.preventDefault();
+    inputLetter(data);
+  } else if (e.inputType === "deleteContentBackward") {
+    e.preventDefault();
+    eraseLetter();
+  }
 });
 
-buildKeyboard();
+mobileInput.addEventListener("input", () => {
+  mobileInput.value = "";
+});
 
 async function loadPuzzle(filename) {
   try {
@@ -75,7 +72,7 @@ async function loadPuzzle(filename) {
     puzzle = await response.json();
     startPuzzle();
   } catch (error) {
-    alert("Could not load puzzle. Check that JSON files are inside the /data folder.\n\n" + error.message);
+    alert("Could not load puzzle. Make sure JSON files are inside /data.\n\n" + error.message);
   }
 }
 
@@ -96,18 +93,18 @@ function startPuzzle() {
 
   renderGrid();
   renderClues();
-  renderMobileClues();
   setFirstActiveCell();
 
   seconds = 0;
   updateTimer();
   updateBest();
   startTimer();
+  focusInput();
 }
 
 function renderGrid() {
   gridEl.innerHTML = "";
-  const size = puzzle.gridSize || 7;
+  const size = puzzle.gridSize || solution.length;
   gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
   gridEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
 
@@ -119,18 +116,19 @@ function renderGrid() {
       cell.dataset.col = c;
 
       if (solution[r][c] !== "#") {
-        const num = getCellNumber(r, c);
-        if (num) {
-          const numEl = document.createElement("span");
-          numEl.className = "num";
-          numEl.textContent = num;
-          cell.appendChild(numEl);
+        const number = getCellNumber(r, c);
+        if (number) {
+          const num = document.createElement("span");
+          num.className = "num";
+          num.textContent = number;
+          cell.appendChild(num);
         }
 
         const letter = document.createElement("span");
         letter.className = "letter";
         letter.textContent = userGrid[r][c];
         cell.appendChild(letter);
+
         cell.addEventListener("click", () => selectCell(r, c));
       }
 
@@ -146,13 +144,6 @@ function renderClues() {
   puzzle.clues.down.forEach(clue => downCluesEl.appendChild(clueItem(clue, "down")));
 }
 
-function renderMobileClues() {
-  if (!puzzle) return;
-  mobileCluesEl.innerHTML = "";
-  const list = mobileTab === "across" ? puzzle.clues.across : puzzle.clues.down;
-  list.forEach(clue => mobileCluesEl.appendChild(clueItem(clue, mobileTab)));
-}
-
 function clueItem(clue, direction) {
   const li = document.createElement("li");
   li.dataset.number = clue.number;
@@ -160,9 +151,6 @@ function clueItem(clue, direction) {
   li.textContent = `${clue.number}. ${clue.clue}`;
   li.addEventListener("click", () => {
     active = { row: clue.row, col: clue.col, direction };
-    mobileTab = direction;
-    updateTabState();
-    renderMobileClues();
     updateHighlights();
     focusInput();
   });
@@ -179,25 +167,19 @@ function selectCell(row, col) {
       active.direction = active.direction === "across" ? "down" : "across";
     }
   }
-
-  mobileTab = active.direction;
-  updateTabState();
-  renderMobileClues();
   updateHighlights();
   focusInput();
 }
 
 function setFirstActiveCell() {
   const first = puzzle.clues.across[0] || puzzle.clues.down[0];
-  active = { row: first.row, col: first.col, direction: puzzle.clues.across[0] ? "across" : "down" };
-  mobileTab = active.direction;
-  updateTabState();
+  active = { row: first.row, col: first.col, direction: first.direction || "across" };
   updateHighlights();
 }
 
 function getCellNumber(row, col) {
-  const entry = entries.find(e => e.row === row && e.col === col);
-  return entry ? entry.number : "";
+  const found = entries.find(e => e.row === row && e.col === col);
+  return found ? found.number : "";
 }
 
 function entryForCell(row, col, direction) {
@@ -220,11 +202,7 @@ function updateHighlights() {
   if (!entry) {
     const alt = active.direction === "across" ? "down" : "across";
     entry = entryForCell(active.row, active.col, alt);
-    if (entry) {
-      active.direction = alt;
-      mobileTab = alt;
-      updateTabState();
-    }
+    if (entry) active.direction = alt;
   }
 
   if (entry) {
@@ -235,30 +213,17 @@ function updateHighlights() {
       if (el) el.classList.add("word");
     }
 
-    document.querySelectorAll(`li[data-number="${entry.number}"][data-direction="${entry.direction}"]`).forEach(el => {
-      el.classList.add("active");
-    });
-
+    document.querySelectorAll(`li[data-number="${entry.number}"][data-direction="${entry.direction}"]`).forEach(el => el.classList.add("active"));
     activeClueEl.textContent = `${entry.number} ${capitalize(entry.direction)}: ${entry.clue}`;
   }
 
   const activeEl = cellEl(active.row, active.col);
   if (activeEl) activeEl.classList.add("active");
-
-  updateTypedPreview();
-}
-
-function updateTypedPreview() {
-  if (!puzzle || solution[active.row][active.col] === "#") {
-    typedPreview.textContent = "—";
-    return;
-  }
-  const letter = userGrid[active.row][active.col] || "empty";
-  typedPreview.textContent = `Row ${active.row + 1}, Col ${active.col + 1}: ${letter}`;
 }
 
 function handleKeydown(e) {
   if (puzzlePanel.classList.contains("hidden")) return;
+  if (e.target === mobileInput) return;
 
   if (/^[a-zA-Z]$/.test(e.key)) {
     inputLetter(e.key.toUpperCase());
@@ -284,16 +249,20 @@ function handleKeydown(e) {
 }
 
 function inputLetter(letter) {
-  if (solution[active.row][active.col] === "#") return;
+  const now = Date.now();
+  if (now - lastInputStamp < 35) return;
+  lastInputStamp = now;
+
+  if (!puzzle || solution[active.row][active.col] === "#") return;
   userGrid[active.row][active.col] = letter;
   refreshLetters();
-  updateTypedPreview();
   advance();
   updateHighlights();
   checkCompletion();
 }
 
 function eraseLetter() {
+  if (!puzzle) return;
   if (userGrid[active.row][active.col]) {
     userGrid[active.row][active.col] = "";
   } else {
@@ -344,9 +313,6 @@ function moveClue(step) {
 
 function toggleDirection() {
   active.direction = active.direction === "across" ? "down" : "across";
-  mobileTab = active.direction;
-  updateTabState();
-  renderMobileClues();
   updateHighlights();
 }
 
@@ -399,6 +365,7 @@ function resetPuzzle() {
   refreshLetters();
   updateHighlights();
   updateTimer();
+  focusInput();
 }
 
 function checkCompletion() {
@@ -455,41 +422,12 @@ function updateBest() {
   bestTimeEl.textContent = best ? `Best ${formatTime(best)}` : "Best --";
 }
 
-function updateTabState() {
-  document.querySelectorAll(".tab").forEach(tab => {
-    tab.classList.toggle("active", tab.dataset.tab === mobileTab);
-  });
-}
-
-function buildKeyboard() {
-  const keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  keyboardEl.innerHTML = "";
-  keys.forEach(k => {
-    const btn = document.createElement("button");
-    btn.className = "key";
-    btn.textContent = k;
-    btn.addEventListener("click", () => inputLetter(k));
-    keyboardEl.appendChild(btn);
-  });
-  const back = document.createElement("button");
-  back.className = "key wide";
-  back.textContent = "⌫";
-  back.addEventListener("click", eraseLetter);
-  keyboardEl.appendChild(back);
-
-  const dir = document.createElement("button");
-  dir.className = "key wide";
-  dir.textContent = "↕";
-  dir.addEventListener("click", toggleDirection);
-  keyboardEl.appendChild(dir);
-}
-
 function cellEl(row, col) {
   return document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
 }
 
 function focusInput() {
-  mobileInput.focus();
+  setTimeout(() => mobileInput.focus({ preventScroll: true }), 0);
 }
 
 function capitalize(word) {

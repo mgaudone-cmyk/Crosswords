@@ -1,16 +1,13 @@
 # CrossPop Crossword
 
-Improved NYT-style layout with:
-- Better grid styling
-- Clear active square highlight
-- Visible typed cell preview
-- On-screen keyboard for iPhone
-- Sticky active clue bar
-- Across / Down clue navigation
+This version fixes:
+- Double-letter typing bug on iPhone
+- Removes custom letter keyboard
+- Uses a stronger book-style crossword grid
+- Cleaner clue panel
+- Larger 11x11 puzzle model
 
-## GitHub Pages structure
-
-Upload exactly this:
+## Upload structure
 
 ```text
 index.html
@@ -24,8 +21,4 @@ README.md
   geography-001.json
 ```
 
-Your URL should be:
-
-```text
-https://mgaudone-cmyk.github.io/Crosswords/
-```
+Replace the old files in GitHub with these files.
